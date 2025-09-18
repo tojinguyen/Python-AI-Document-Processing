@@ -1,5 +1,15 @@
 Django>=5.0
-psycopg2-binary
-
 djangorestframework
+psycopg2-binary
+django-cors-headers
+python-dotenv
 djangorestframework-simplejwt
+
+boto3                 # MinIO (S3 SDK)
+celery[redis,rabbitmq]
+pika                  # RabbitMQ client
+
+pgvector              # Postgres vector extension
+sqlalchemy            # optional cho AI query
+transformers          # HuggingFace
+openai                # OpenAI API
