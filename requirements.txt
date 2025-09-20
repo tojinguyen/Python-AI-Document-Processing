@@ -13,3 +13,4 @@ pgvector              # Postgres vector extension
 sqlalchemy            # optional cho AI query
 transformers          # HuggingFace
 openai                # OpenAI API
+drf-yasg              
