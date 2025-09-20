@@ -2,7 +2,7 @@ from rest_framework import generics, permissions
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.contrib.auth import get_user_model
-from .serializers import RegisterSerializer
+from .serializers import RegisterSerializer, LoginSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
 
 User = get_user_model()
@@ -15,6 +15,7 @@ class RegisterView(generics.CreateAPIView):
 
 #Login
 class LoginView(APIView):
+    serializer_class = LoginSerializer
     permission_classes = [permissions.AllowAny]
 
     def post(self, request):
