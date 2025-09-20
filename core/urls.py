@@ -26,9 +26,9 @@ from rest_framework import permissions
 
 schema_view = get_schema_view(
     openapi.Info(
-        title="My API",
+        title="Python AI Document Processing API",
         default_version="v1",
-        description="API docs cho hệ thống",
+        description="API docs for the Python AI Document Processing project",
         terms_of_service="https://www.google.com/policies/terms/",
         contact=openapi.Contact(email="support@myapi.com"),
         license=openapi.License(name="MIT License"),
