@@ -28,5 +28,30 @@ class RegisterSerializer(serializers.ModelSerializer):
         return user
     
 class LoginSerializer(serializers.Serializer):
-    username = serializers.CharField(required=True)
-    password = serializers.CharField(write_only=True, required=True)
+    username = serializers.CharField(max_length=150)
+    password = serializers.CharField(
+        max_length=128,
+        write_only=True, 
+        style={'input_type': 'password'}
+    )
+    
+    # Thêm field này nếu bạn muốn trả về token
+    access = serializers.CharField(read_only=True)
+    refresh = serializers.CharField(read_only=True)
+
+    def validate(self, data):
+        from django.contrib.auth import authenticate
+        username = data.get('username')
+        password = data.get('password')
+
+        if username and password:
+            user = authenticate(request=self.context.get('request'), username=username, password=password)
+            if not user:
+                msg = 'Unable to log in with provided credentials.'
+                raise serializers.ValidationError(msg, code='authorization')
+        else:
+            msg = 'Must include "username" and "password".'
+            raise serializers.ValidationError(msg, code='authorization')
+
+        data['user'] = user
+        return data
