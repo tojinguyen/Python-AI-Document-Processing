@@ -40,11 +40,13 @@ class DocumentDeleteView(generics.DestroyAPIView):
     queryset = Document.objects.all()
     serializer_class = DocumentSerializer
     permission_classes = [permissions.IsAuthenticated]
+    
+    def get_queryset(self):
+        return self.queryset.filter(user=self.request.user)
 
-    def delete(self, request, *args, **kwargs):
-        document = self.get_object()
-        if document.user != request.user:
-            return Response({"error": "You do not have permission to delete this document."}, status=status.HTTP_403_FORBIDDEN)
-        
-        document.delete()
-        return Response({"message": "Document deleted successfully."}, status=status.HTTP_204_NO_CONTENT)
+    def perform_destroy(self, instance):
+        try:
+            instance.file.delete(save=False)
+        except Exception as e:
+            print(f"Error deleting file from MinIO for document {instance.id}: {e}")
+        super().perform_destroy(instance)
