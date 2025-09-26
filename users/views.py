@@ -16,6 +16,20 @@ class RegisterView(generics.CreateAPIView):
     serializer_class = RegisterSerializer
     permission_classes = [permissions.AllowAny]
 
+    @swagger_auto_schema(
+        responses={
+            201: openapi.Response(
+                description="Đăng ký thành công"
+            ),
+            400: openapi.Response(
+                description="Dữ liệu đăng ký không hợp lệ"
+            )
+        },
+        security=[]
+    )
+    def post(self, request, *args, **kwargs):
+        return super().post(request, *args, **kwargs)
+
 #Login
 class LoginView(APIView):
     serializer_class = LoginSerializer
@@ -41,7 +55,8 @@ class LoginView(APIView):
                     }
                 }
             )
-        }
+        },
+        security=[]
     )
     def post(self, request):
         serializer = LoginSerializer(data=request.data, context={'request': request})
