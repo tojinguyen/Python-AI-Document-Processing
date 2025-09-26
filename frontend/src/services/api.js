@@ -87,4 +87,52 @@ export const authAPI = {
   },
 };
 
+// Document API functions
+export const documentAPI = {
+  // Upload document
+  upload: async (file, onUploadProgress) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    const response = await api.post('/documents/upload/', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+      onUploadProgress,
+    });
+    return response.data;
+  },
+
+  // Get all documents for current user
+  getAll: async (page = 1, search = '', status = '') => {
+    const params = new URLSearchParams();
+    if (page > 1) params.append('page', page);
+    if (search) params.append('search', search);
+    if (status) params.append('status', status);
+    
+    const response = await api.get(`/documents/?${params.toString()}`);
+    return response.data;
+  },
+
+  // Get document by ID
+  getById: async (documentId) => {
+    const response = await api.get(`/documents/${documentId}/`);
+    return response.data;
+  },
+
+  // Delete document
+  delete: async (documentId) => {
+    const response = await api.delete(`/documents/${documentId}/`);
+    return response.data;
+  },
+
+  // Download document
+  download: async (documentId) => {
+    const response = await api.get(`/documents/${documentId}/download/`, {
+      responseType: 'blob',
+    });
+    return response;
+  },
+};
+
 export default api;
