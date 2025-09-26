@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'storages',
     
     "rest_framework",
     "rest_framework_simplejwt",
@@ -193,3 +194,23 @@ SWAGGER_SETTINGS = {
         'Bearer': []
     }],
 }
+
+STORAGES = {
+    "default": {
+        "BACKEND": "storages.backends.s3.S3Storage",
+    },
+    "staticfiles": {
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+    },
+}
+
+AWS_ACCESS_KEY_ID = 'minioadmin' # Từ docker-compose.yml
+AWS_SECRET_ACCESS_KEY = 'minioadmin' # Từ docker-compose.yml
+AWS_STORAGE_BUCKET_NAME = 'documents' # Tên bucket bạn sẽ tạo
+AWS_S3_ENDPOINT_URL = 'http://minio:9000' # Địa chỉ MinIO service trong Docker
+AWS_S3_OBJECT_PARAMETERS = {
+    'CacheControl': 'max-age=86400',
+}
+AWS_LOCATION = ''
+AWS_S3_FILE_OVERWRITE = False
+AWS_DEFAULT_ACL = None
