@@ -2,7 +2,7 @@ from rest_framework import generics, permissions
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.contrib.auth import get_user_model
-from .serializers import RegisterSerializer, LoginSerializer
+from .serializers import RegisterSerializer, LoginSerializer, ProfileSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework import status
 from drf_yasg.utils import swagger_auto_schema
@@ -60,10 +60,22 @@ class LoginView(APIView):
 class ProfileView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
+    @swagger_auto_schema(
+        responses={200: ProfileSerializer()}
+    )
     def get(self, request):
-        user = request.user
+        serializer = ProfileSerializer(request.user)
         return Response({
-            "id": user.id,
-            "username": user.username,
-            "email": user.email,
+            serializer.data
         })
+        
+    @swagger_auto_schema(
+        request_body=ProfileSerializer,
+        responses={200: ProfileSerializer()}
+    )
+    def put(self, request):
+        serializer = ProfileSerializer(request.user, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
