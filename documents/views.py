@@ -35,3 +35,16 @@ class DocumentListView(generics.ListAPIView):
 
     def get_queryset(self):
         return Document.objects.filter(user=self.request.user).order_by('-created_at')
+    
+class DocumentDeleteView(generics.DestroyAPIView):
+    queryset = Document.objects.all()
+    serializer_class = DocumentSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def delete(self, request, *args, **kwargs):
+        document = self.get_object()
+        if document.user != request.user:
+            return Response({"error": "You do not have permission to delete this document."}, status=status.HTTP_403_FORBIDDEN)
+        
+        document.delete()
+        return Response({"message": "Document deleted successfully."}, status=status.HTTP_204_NO_CONTENT)
