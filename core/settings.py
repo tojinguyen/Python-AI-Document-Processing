@@ -147,3 +147,19 @@ CELERY_RESULT_BACKEND = "rpc://"
 
 
 AUTH_USER_MODEL = "users.User"
+
+
+SWAGGER_SETTINGS = {
+    'SECURITY_DEFINITIONS': {
+        'Bearer': {
+            'type': 'apiKey',
+            'name': 'Authorization',
+            'in': 'header',
+            'description': 'Nhập "Bearer [token]" để xác thực. Ví dụ: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."'
+        }
+    },
+    # (Tùy chọn) Áp dụng xác thực cho tất cả các API
+    'SECURITY_REQUIREMENTS': [{
+        'Bearer': []
+    }],
+}
