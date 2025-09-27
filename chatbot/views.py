@@ -3,10 +3,12 @@ from rest_framework.response import Response
 from rest_framework import status, permissions
 from pgvector.django import CosineDistance
 
-from .serializers import AskQuestionSerializer, ChatMessageSerializer, ConversationSerializer
+from .serializers import AskQuestionSerializer, ChatMessageSerializer
 from .models import Conversation, ChatMessage
 from documents.models import DocumentChunk
 from documents.tasks import embedding_model 
+import google.generativeai as genai
+from django.conf import settings 
 
 
 class ChatView(APIView):
@@ -62,32 +64,39 @@ class ChatView(APIView):
         context = "\n\n".join([chunk.content for chunk in relevant_chunks])
 
         # --- BƯỚC 3: GENERATION ---
-        # TODO: Thay thế bằng lời gọi đến một LLM thực sự (ví dụ: OpenAI, Llama)
-        # Hiện tại, chúng ta sẽ giả lập câu trả lời để kiểm tra luồng hoạt động
-        
-        # PROMPT TEMPLATE (để dùng với LLM thật)
         prompt = f"""
-        You are a helpful AI assistant. Answer the user's question based ONLY on the following context provided from their documents.
-        If the context does not contain the answer, say "I'm sorry, I couldn't find an answer in your documents."
+        Bạn là một trợ lý AI hữu ích. Hãy trả lời câu hỏi của người dùng CHỈ DỰA VÀO ngữ cảnh được cung cấp từ tài liệu của họ.
+        Câu trả lời của bạn phải bằng tiếng Việt.
+        Nếu ngữ cảnh không chứa câu trả lời, hãy nói: "Xin lỗi, tôi không tìm thấy thông tin để trả lời câu hỏi này trong tài liệu của bạn."
         
-        Context:
+        Ngữ cảnh:
         ---
         {context}
         ---
         
-        Question: {question}
+        Câu hỏi: {question}
         
-        Answer:
+        Câu trả lời (bằng tiếng Việt):
         """
         
-        # DUMMY RESPONSE (for testing without an LLM API key)
-        dummy_answer = f"Based on your documents, here is the relevant information for '{question}':\n\n{context}"
+        final_answer = ""
+        try:
+            if not settings.GOOGLE_API_KEY:
+                raise ValueError("GOOGLE_API_KEY is not configured.")
+
+            model = genai.GenerativeModel('gemini-1.5-flash')
+            response = model.generate_content(prompt)
+            final_answer = response.text.strip()
+
+        except Exception as e:
+            print(f"Error calling Google Gemini API: {e}")
+            final_answer = "Xin lỗi, đã có lỗi xảy ra khi xử lý yêu cầu của bạn với mô hình AI."
         
         # Tạo và lưu tin nhắn của assistant
         assistant_message = ChatMessage.objects.create(
             conversation=conversation,
             role='assistant',
-            content=dummy_answer  # Thay 'dummy_answer' bằng 'response_from_llm' khi tích hợp
+            content=final_answer  
         )
         # Gắn các sources vào tin nhắn
         assistant_message.sources.set(relevant_chunks)
