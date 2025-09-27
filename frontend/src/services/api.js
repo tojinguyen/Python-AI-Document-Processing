@@ -144,7 +144,7 @@ export const chatAPI = {
       requestData.conversation_id = conversationId;
     }
     
-    const response = await api.post('/chatbot/ask/', requestData);
+    const response = await api.post('/chat/ask/', requestData);
     return response.data;
   },
 };
