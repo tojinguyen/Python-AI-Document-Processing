@@ -5,6 +5,7 @@ from .serializers import DocumentUploadSerializer, DocumentSerializer
 from rest_framework import permissions
 from rest_framework.response import Response
 from rest_framework import status
+from .tasks import process_document
 
 class DocumentUploadView(generics.CreateAPIView):
     queryset = Document.objects.all()
@@ -20,11 +21,13 @@ class DocumentUploadView(generics.CreateAPIView):
             mime_type = file_obj.content_type
         )
         
-        # TODO: Bước 4 - Gọi Celery task để xử lý nền
-        # process_document.delay(document.id)
+        process_document.delay(document.id)
         
         return Response(
-            {"message": "Document uploaded successfully and processing started.", "document_id": document.id},
+            {
+                "message": "Document uploaded successfully and processing started.",
+                "document_id": document.id
+            },
             status=status.HTTP_201_CREATED
         )
         
