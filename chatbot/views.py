@@ -5,7 +5,7 @@ from pgvector.django import CosineDistance
 
 from .serializers import AskQuestionSerializer, ChatMessageSerializer, ConversationSerializer
 from .models import Conversation, ChatMessage
-from documents.models import Document, DocumentChunk
+from documents.models import DocumentChunk
 from documents.tasks import embedding_model 
 
 
