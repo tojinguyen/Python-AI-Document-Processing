@@ -15,3 +15,7 @@ transformers          # HuggingFace
 openai                # OpenAI API
 drf-yasg              
 django-storages
+
+PyMuPDF
+python-docx 
+sentence-transformers
