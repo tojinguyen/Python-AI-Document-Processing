@@ -30,7 +30,7 @@ class DocumentChunk(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     document = models.ForeignKey(Document, related_name='chunks', on_delete=models.CASCADE)
     content = models.TextField()
-    embedding = VectorField(dimensions=768, null=True, blank=True) 
+    embedding = VectorField(dimensions=384, null=True, blank=True) 
     page_number = models.IntegerField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     
