@@ -10,7 +10,9 @@ from documents.tasks import embedding_model
 import google.generativeai as genai
 from django.conf import settings 
 
-
+if settings.GOOGLE_API_KEY:
+    genai.configure(api_key=settings.GOOGLE_API_KEY)
+    
 class ChatView(APIView):
     permission_classes = [permissions.IsAuthenticated]
     
