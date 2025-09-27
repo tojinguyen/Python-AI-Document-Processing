@@ -21,6 +21,9 @@ WORKDIR /app
 # Sao chép các gói đã được cài đặt từ stage builder
 COPY --from=builder /app/packages /usr/local/lib/python3.11/site-packages
 
+# Thêm thư mục bin của các gói vào PATH hệ thống
+ENV PATH="/usr/local/lib/python3.11/site-packages/bin:${PATH}"
+
 # Sao chép mã nguồn ứng dụng
 COPY . .
 
