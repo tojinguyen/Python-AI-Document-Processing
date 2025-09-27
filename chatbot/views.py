@@ -7,11 +7,12 @@ from .serializers import AskQuestionSerializer, ChatMessageSerializer
 from .models import Conversation, ChatMessage
 from documents.models import DocumentChunk
 from documents.tasks import embedding_model 
-import google.generativeai as genai
+from openai import OpenAI
 from django.conf import settings 
+import logging
 
-if settings.GOOGLE_API_KEY:
-    genai.configure(api_key=settings.GOOGLE_API_KEY)
+logger = logging.getLogger(__name__)
+
     
 class ChatView(APIView):
     permission_classes = [permissions.IsAuthenticated]
@@ -83,15 +84,26 @@ class ChatView(APIView):
         
         final_answer = ""
         try:
-            if not settings.GOOGLE_API_KEY:
-                raise ValueError("GOOGLE_API_KEY is not configured.")
+            if not settings.OPENAI_API_KEY:
+                logger.warning("OPENAI_API_KEY is not configured.")
+                raise ValueError("OPENAI_API_KEY is not configured.")
 
-            model = genai.GenerativeModel('gemini-1.5-flash')
-            response = model.generate_content(prompt)
-            final_answer = response.text.strip()
+            logger.debug(f"Prompt sent to OpenAI: {prompt}")
+            
+            client = OpenAI(api_key=settings.OPENAI_API_KEY)
+            
+            response = client.chat.completions.create(
+                model="gpt-3.5-turbo", 
+                messages=[
+                    {"role": "system", "content": "Bạn là một trợ lý AI hữu ích chuyên trả lời câu hỏi dựa trên ngữ cảnh được cung cấp bằng tiếng Việt."},
+                    {"role": "user", "content": prompt}
+                ],
+                temperature=0.2,
+            )
+            final_answer = response.choices[0].message.content.strip()
 
         except Exception as e:
-            print(f"Error calling Google Gemini API: {e}")
+            logger.error(f"Error calling OpenAI API: {e}", exc_info=True)
             final_answer = "Xin lỗi, đã có lỗi xảy ra khi xử lý yêu cầu của bạn với mô hình AI."
         
         # Tạo và lưu tin nhắn của assistant

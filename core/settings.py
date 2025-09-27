@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 from pathlib import Path
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -215,4 +216,4 @@ AWS_LOCATION = ''
 AWS_S3_FILE_OVERWRITE = False
 AWS_DEFAULT_ACL = None
 
-GOOGLE_API_KEY = 'AIzaSyB-m1cOUcvIZg6A56eTPtkJgPEB5Q3nMZY'
+OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
