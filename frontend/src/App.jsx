@@ -5,6 +5,7 @@ import LoginForm from './components/LoginForm';
 import RegisterForm from './components/RegisterForm';
 import Dashboard from './components/Dashboard';
 import DocumentsPage from './components/DocumentsPage';
+import ChatPage from './components/ChatPage';
 import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
@@ -55,6 +56,14 @@ function App() {
           element={
             <ProtectedRoute>
               <DocumentsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/chat"
+          element={
+            <ProtectedRoute>
+              <ChatPage />
             </ProtectedRoute>
           }
         />

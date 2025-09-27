@@ -135,4 +135,18 @@ export const documentAPI = {
   },
 };
 
+// Chat API functions
+export const chatAPI = {
+  // Ask question to chatbot
+  askQuestion: async (question, conversationId = null) => {
+    const requestData = { question };
+    if (conversationId) {
+      requestData.conversation_id = conversationId;
+    }
+    
+    const response = await api.post('/chatbot/ask/', requestData);
+    return response.data;
+  },
+};
+
 export default api;

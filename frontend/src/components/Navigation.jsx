@@ -9,6 +9,7 @@ const Navigation = () => {
   const navigation = [
     { name: 'Dashboard', href: '/dashboard', current: location.pathname === '/dashboard' },
     { name: 'Tài liệu', href: '/documents', current: location.pathname === '/documents' },
+    { name: 'AI Chat', href: '/chat', current: location.pathname === '/chat' },
   ];
 
   return (
