@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from rest_framework import generics
-from .models import Document
+from .models import Document, DocumentChunk
 from .serializers import DocumentUploadSerializer, DocumentSerializer
 from rest_framework import permissions
 from rest_framework.response import Response
@@ -48,6 +48,8 @@ class DocumentDeleteView(generics.DestroyAPIView):
         return self.queryset.filter(user=self.request.user)
 
     def perform_destroy(self, instance):
+        DocumentChunk.objects.filter(document=instance).delete()
+        
         try:
             instance.file.delete(save=False)
         except Exception as e:
