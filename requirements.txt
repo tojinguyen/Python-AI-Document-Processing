@@ -19,5 +19,3 @@ django-storages
 PyMuPDF
 python-docx 
 sentence-transformers
-google-generativeai
-llama-cpp-python
