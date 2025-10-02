@@ -13,6 +13,7 @@ services:
       - db
       - minio
       - rabbitmq
+      - ollama
 
   db:
     image: pgvector/pgvector:pg16
@@ -52,7 +53,17 @@ services:
     depends_on:
       - web
       - rabbitmq
+      - ollama
+
+  ollama:
+    image: ollama/ollama:latest
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    container_name: ollama
 
 volumes:
   pgdata:
   minio_data:
+  ollama_data:
