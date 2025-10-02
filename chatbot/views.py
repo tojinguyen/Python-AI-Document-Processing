@@ -8,7 +8,6 @@ from .models import Conversation, ChatMessage
 from documents.models import DocumentChunk
 from documents.tasks import embedding_model 
 from openai import OpenAI
-from django.conf import settings 
 import logging
 
 logger = logging.getLogger(__name__)
@@ -84,16 +83,15 @@ class ChatView(APIView):
         
         final_answer = ""
         try:
-            if not settings.OPENAI_API_KEY:
-                logger.warning("OPENAI_API_KEY is not configured.")
-                raise ValueError("OPENAI_API_KEY is not configured.")
-
             logger.debug(f"Prompt sent to OpenAI: {prompt}")
             
-            client = OpenAI(api_key=settings.OPENAI_API_KEY)
+            client = OpenAI(
+                base_url='http://ollama:11434/v1', 
+                api_key='ollama',
+            )
             
             response = client.chat.completions.create(
-                model="gpt-3.5-turbo", 
+                model="phi3:mini", 
                 messages=[
                     {"role": "system", "content": "Bạn là một trợ lý AI hữu ích chuyên trả lời câu hỏi dựa trên ngữ cảnh được cung cấp bằng tiếng Việt."},
                     {"role": "user", "content": prompt}
