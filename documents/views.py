@@ -6,6 +6,7 @@ from rest_framework import permissions
 from rest_framework.response import Response
 from rest_framework import status
 from .tasks import process_document
+from .permissions import IsOwner
 
 class DocumentUploadView(generics.CreateAPIView):
     queryset = Document.objects.all()
@@ -29,8 +30,7 @@ class DocumentUploadView(generics.CreateAPIView):
                 "document_id": document.id
             },
             status=status.HTTP_201_CREATED
-        )
-        
+        )   
         
 class DocumentListView(generics.ListAPIView):
     serializer_class = DocumentSerializer
@@ -42,7 +42,7 @@ class DocumentListView(generics.ListAPIView):
 class DocumentDeleteView(generics.DestroyAPIView):
     queryset = Document.objects.all()
     serializer_class = DocumentSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsOwner]
     
     def get_queryset(self):
         return self.queryset.filter(user=self.request.user)
