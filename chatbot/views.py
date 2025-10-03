@@ -9,6 +9,7 @@ from documents.models import DocumentChunk
 from documents.tasks import embedding_model 
 from openai import OpenAI
 import logging
+import time
 
 logger = logging.getLogger(__name__)
 
@@ -51,10 +52,10 @@ class ChatView(APIView):
             document__status='completed'
         ).annotate(
             distance=CosineDistance('embedding', question_embedding)
-        ).order_by('distance')[:5] # Lấy 5 chunks gần nhất
+        ).order_by('distance')[:3] # Giảm xuống 3 chunks để giảm context length
 
         if not relevant_chunks:
-            answer_content = "I'm sorry, I couldn't find any relevant information in your documents to answer that question."
+            answer_content = "Xin lỗi, tôi không tìm thấy thông tin liên quan trong tài liệu của bạn để trả lời câu hỏi này."
             assistant_message = ChatMessage.objects.create(
                 conversation=conversation, 
                 role='assistant', 
@@ -63,46 +64,61 @@ class ChatView(APIView):
             return Response(ChatMessageSerializer(assistant_message).data, status=status.HTTP_200_OK)
 
         # --- BƯỚC 2: AUGMENTATION ---
-        context = "\n\n".join([chunk.content for chunk in relevant_chunks])
+        # Giới hạn độ dài context để tránh quá tải model
+        context_parts = []
+        total_length = 0
+        max_context_length = 2000  # Giới hạn context length
+        
+        for chunk in relevant_chunks:
+            if total_length + len(chunk.content) > max_context_length:
+                break
+            context_parts.append(chunk.content)
+            total_length += len(chunk.content)
+            
+        context = "\n\n".join(context_parts)
 
         # --- BƯỚC 3: GENERATION ---
-        prompt = f"""
-        Bạn là một trợ lý AI hữu ích. Hãy trả lời câu hỏi của người dùng CHỈ DỰA VÀO ngữ cảnh được cung cấp từ tài liệu của họ.
-        Câu trả lời của bạn phải bằng tiếng Việt.
-        Nếu ngữ cảnh không chứa câu trả lời, hãy nói: "Xin lỗi, tôi không tìm thấy thông tin để trả lời câu hỏi này trong tài liệu của bạn."
-        
-        Ngữ cảnh:
-        ---
-        {context}
-        ---
-        
-        Câu hỏi: {question}
-        
-        Câu trả lời (bằng tiếng Việt):
-        """
+        # Sử dụng prompt ngắn gọn ngay từ đầu để giảm thời gian xử lý
+        prompt = f"Trả lời ngắn gọn: {question}"
         
         final_answer = ""
+        start_time = time.time()
         try:
-            logger.debug(f"Prompt sent to OpenAI: {prompt}")
+            logger.info(f"Starting AI request for question: {question[:50]}...")
             
+            # Tăng timeout và config connection
             client = OpenAI(
                 base_url='http://ollama:11434/v1', 
                 api_key='ollama',
+                timeout=180.0,  # Tăng timeout lên 180 giây (3 phút)
+                max_retries=0   # Tắt retry để tránh double timeout
             )
+            
+            # Warm-up model nếu là request đầu tiên (tùy chọn)
+            logger.info("Sending request to phi3:mini model...")
             
             response = client.chat.completions.create(
                 model="phi3:mini", 
                 messages=[
-                    {"role": "system", "content": "Bạn là một trợ lý AI hữu ích chuyên trả lời câu hỏi dựa trên ngữ cảnh được cung cấp bằng tiếng Việt."},
                     {"role": "user", "content": prompt}
                 ],
-                temperature=0.2,
+                temperature=0.1,  # Giảm temperature để response nhanh hơn
+                max_tokens=300,   # Giảm response length
+                stream=False
             )
             final_answer = response.choices[0].message.content.strip()
+            
+            processing_time = time.time() - start_time
+            logger.info(f"AI response received in {processing_time:.2f} seconds")
 
         except Exception as e:
-            logger.error(f"Error calling OpenAI API: {e}", exc_info=True)
-            final_answer = "Xin lỗi, đã có lỗi xảy ra khi xử lý yêu cầu của bạn với mô hình AI."
+            processing_time = time.time() - start_time
+            logger.error(f"Error calling OpenAI API after {processing_time:.2f}s: {e}", exc_info=True)
+            
+            if "timeout" in str(e).lower():
+                final_answer = "Xin lỗi, hệ thống AI hiện đang quá tải. Vui lòng thử lại sau ít phút."
+            else:
+                final_answer = "Xin lỗi, đã có lỗi xảy ra khi xử lý yêu cầu của bạn với mô hình AI."
         
         # Tạo và lưu tin nhắn của assistant
         assistant_message = ChatMessage.objects.create(
@@ -115,5 +131,6 @@ class ChatView(APIView):
 
         response_serializer = ChatMessageSerializer(assistant_message)
         return Response(response_serializer.data, status=status.HTTP_200_OK)
+
     
     
