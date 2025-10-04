@@ -134,13 +134,29 @@ def process_document(document_id):
         
         
 @shared_task(name="documents.tasks.cleanup_old_failed_documents")
-def cleanup_old_failed_documents(days_old):
+def cleanup_old_failed_documents(days_old = 30):
+    logger.info(f"Starting cleanup task for failed documents older than {days_old} days.")
+    
     time_threshold = timezone.now() - timedelta(days=days_old)
     old_failed_docs = Document.objects.filter(
         status='failed',
         updated_at__lt=time_threshold
     )
     count = old_failed_docs.count()
-    old_failed_docs.delete()
+    
+    if count > 0:
+        for doc in old_failed_docs:
+            try:
+                doc.file.delete(save=False)
+                logger.info(f"Deleted file {doc.file_name} from storage.")
+            except Exception as e:
+                logger.error(f"Could not delete file for document {doc.id}: {e}")
+
+        # Xóa bản ghi trong database
+        old_failed_docs.delete()
+        logger.info(f"Successfully cleaned up {count} old failed document records.")
+    else:
+        logger.info("No old failed documents to clean up.")
+    
     logger.info(f"Cleaned up {count} old failed documents.")
     return f"Cleaned up {count} documents."

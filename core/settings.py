@@ -11,7 +11,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 from pathlib import Path
-import os
+from celery.schedules import crontab
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -183,6 +183,14 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 CELERY_BROKER_URL = "amqp://guest:guest@rabbitmq:5672//"
 CELERY_RESULT_BACKEND = "rpc://"
 
+CELERY_BEAT_SCHEDULE = {
+    'cleanup-failed-docs-every-day': {
+        'task': 'cleanup_old_failed_documents', 
+        'schedule': crontab(hour=2, minute=30), 
+        'args': (30,), 
+    },
+}
+
 
 AUTH_USER_MODEL = "users.User"
 
@@ -241,3 +249,4 @@ AWS_S3_OBJECT_PARAMETERS = {
 AWS_LOCATION = ''
 AWS_S3_FILE_OVERWRITE = False
 AWS_DEFAULT_ACL = None
+
