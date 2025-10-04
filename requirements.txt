@@ -19,3 +19,4 @@ django-storages
 PyMuPDF
 python-docx 
 sentence-transformers
+django-celery-beat
