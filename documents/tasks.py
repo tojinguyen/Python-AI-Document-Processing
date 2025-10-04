@@ -4,7 +4,8 @@ import fitz  # PyMuPDF
 import docx
 from celery import shared_task
 from django.db import transaction
-
+from datetime import timedelta
+from django.utils import timezone
 from .models import Document, DocumentChunk
 from sentence_transformers import SentenceTransformer
 
@@ -130,3 +131,16 @@ def process_document(document_id):
         document.status = 'failed'
         document.processing_error = str(e)
         document.save()
+        
+        
+@shared_task(name="documents.tasks.cleanup_old_failed_documents")
+def cleanup_old_failed_documents(days_old):
+    time_threshold = timezone.now() - timedelta(days=days_old)
+    old_failed_docs = Document.objects.filter(
+        status='failed',
+        updated_at__lt=time_threshold
+    )
+    count = old_failed_docs.count()
+    old_failed_docs.delete()
+    logger.info(f"Cleaned up {count} old failed documents.")
+    return f"Cleaned up {count} documents."
